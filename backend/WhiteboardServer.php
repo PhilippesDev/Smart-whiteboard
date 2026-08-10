@@ -15,20 +15,31 @@ class WhiteboardServer implements MessageComponentInterface {
 
     public function onOpen(ConnectionInterface $conn) {
         $this->sessionManager->cleanExpiredSessions();
-        // Assuming every new connection is a PC initially creating a session, unless they send join_session.
-        $sessionId = $this->sessionManager->generateSessionId();
-        $this->sessionManager->createSession($sessionId);
-        $this->sessionManager->setPC($sessionId, $conn);
-        
-        $conn->send(json_encode([
-            'type' => 'session_created',
-            'session_id' => $sessionId
-        ]));
+        // The first WebSocket connection is anonymous until the PC identifies itself.
+        // A session is not created automatically here anymore.
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
         $data = $this->validator->validate($msg);
         if (!$data) {
+            return;
+        }
+
+        if ($data['type'] === 'register_pc') {
+            $sessionId = $this->sessionManager->generateSessionId();
+
+            // Keep generating until a free code is found.
+            while ($this->sessionManager->sessionExists($sessionId)) {
+                $sessionId = $this->sessionManager->generateSessionId();
+            }
+
+            $this->sessionManager->createSession($sessionId);
+            $this->sessionManager->setPC($sessionId, $from);
+
+            $from->send(json_encode([
+                'type' => 'session_created',
+                'session_id' => $sessionId
+            ]));
             return;
         }
 

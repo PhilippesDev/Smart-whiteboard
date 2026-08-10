@@ -13,6 +13,9 @@ class MessageValidator {
         }
 
         switch ($msg['type']) {
+            case 'register_pc':
+                // PC identifies itself explicitly over the WebSocket.
+                return ['type' => 'register_pc'];
             case 'join_session':
                 if (isset($msg['session_id'], $msg['role']) && is_string($msg['session_id']) && is_string($msg['role'])) {
                     if (preg_match('/^[A-Z0-9]{4}-[A-Z0-9]{4}$/', $msg['session_id']) && $msg['role'] === 'mobile') {

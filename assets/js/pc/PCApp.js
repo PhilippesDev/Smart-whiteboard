@@ -39,6 +39,7 @@ window.PCApp = class PCApp {
             
             this.ws.onopen = () => {
                 this.updateConnectionStatus('connected');
+                this.ws.send(JSON.stringify({ type: 'register_pc' }));
             };
             
             this.ws.onmessage = (e) => {
