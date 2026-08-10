@@ -1,0 +1,187 @@
+# Smart Whiteboard — Plan d'implémentation
+
+## Contexte
+
+Application web permettant de transformer un smartphone en tablette graphique pour un PC, via réseau local (LAN). Le smartphone est la surface de dessin, le PC affiche le tableau blanc en temps réel.
+
+Le projet est actuellement **vide** (seul le dépôt git existe).
+
+---
+
+## Architecture technique retenue
+
+### Backend : Ratchet (PHP WebSocket)
+
+PHP seul ne supporte pas nativement les WebSockets persistants. La solution la plus légère et la plus standard pour PHP est **Ratchet** (via Composer), qui est un serveur WebSocket PHP pur, sans Node.js.
+
+> [!IMPORTANT]
+> **Choix architectural clé** : Ratchet tourne comme un processus PHP séparé (ex: `php bin/server.php`) sur le port 8080. Le serveur web classique (Apache/Nginx) sert les fichiers statiques sur le port 80. C'est une approche standard pour PHP + WebSockets.
+
+Si Composer/Ratchet n'est pas disponible, un fallback en **polling HTTP long** (SSE + fetch) sera proposé automatiquement.
+
+### Frontend : HTML5 + CSS3 + JavaScript ES6+ vanilla
+
+Pas de framework. Canvas API native pour le dessin.
+
+---
+
+## Structure du projet
+
+```
+Smart-whiteboard/
+│
+├── composer.json              ← dépendances PHP (Ratchet)
+├── composer.lock
+├── bin/
+│   └── server.php             ← démarrage du serveur WebSocket
+│
+├── backend/
+│   ├── WhiteboardServer.php   ← logique WebSocket principale
+│   ├── SessionManager.php     ← gestion des sessions
+│   └── MessageValidator.php   ← validation des messages
+│
+├── public/                    ← racine web (Apache/Nginx)
+│   ├── index.html             ← page d'accueil / redirection
+│   ├── pc.html                ← interface PC
+│   ├── mobile.html            ← interface smartphone
+│   └── .htaccess
+│
+├── assets/
+│   ├── css/
+│   │   ├── common.css
+│   │   ├── pc.css
+│   │   └── mobile.css
+│   └── js/
+│       ├── common/
+│       │   ├── WebSocketClient.js     ← client WS abstrait
+│       │   └── SessionManager.js      ← gestion session côté client
+│       ├── mobile/
+│       │   ├── MobileApp.js           ← entrée mobile
+│       │   ├── PointerManager.js      ← capture touch/pointer events
+│       │   ├── StrokeTransmitter.js   ← batching + envoi WS
+│       │   └── Smoother.js            ← stabilisation du trait
+│       └── pc/
+│           ├── PCApp.js               ← entrée PC
+│           ├── CanvasRenderer.js      ← rendu canvas haute résolution
+│           ├── Viewport.js            ← zoom/pan
+│           ├── HistoryManager.js      ← undo/redo
+│           ├── ToolManager.js         ← outils PC
+│           ├── ExportManager.js       ← export PNG/SVG/JSON
+│           └── recognition/
+│               ├── ShapeRecognizer.js
+│               ├── LineRecognizer.js
+│               ├── CircleRecognizer.js
+│               ├── RectangleRecognizer.js
+│               ├── TriangleRecognizer.js
+│               └── HandwritingRecognizer.js
+│
+├── storage/                   ← tableaux sauvegardés (JSON)
+└── README.md
+```
+
+---
+
+## Protocole de communication (Messages WebSocket)
+
+```json
+// Connexion mobile
+{ "type": "join_session", "session_id": "A7K9-X2P4", "role": "mobile" }
+
+// Confirmation PC
+{ "type": "session_joined", "role": "pc", "status": "ok" }
+
+// Notification connexion téléphone
+{ "type": "phone_connected", "session_id": "A7K9-X2P4" }
+
+// Début d'un trait
+{ "type": "stroke_start", "id": "s_123", "color": "#000", "width": 4, "tool": "pen", "mode": "raw" }
+
+// Points du trait (batching)
+{ "type": "stroke_points", "id": "s_123", "points": [{"x":0.42,"y":0.31,"p":0.8,"t":123456}] }
+
+// Fin du trait
+{ "type": "stroke_end", "id": "s_123" }
+
+// Objet reconnu (mode SMART)
+{ "type": "object_created", "object": { "type": "circle", "cx": 0.5, "cy": 0.5, "r": 0.2 } }
+
+// Commande (clear, undo, redo)
+{ "type": "command", "action": "clear" }
+```
+
+---
+
+## Phases d'implémentation
+
+### PHASE 1 — Dessin temps réel (smartphone → PC) ✅ *À implémenter*
+
+- Serveur WebSocket PHP (Ratchet)
+- Interface mobile : canvas tactile, capture pointer events
+- Interface PC : canvas récepteur, rendu en temps réel
+- Transmission batching des points (toutes les 16ms ~60fps)
+- Coordonnées normalisées (0.0 → 1.0)
+- Mode RAW uniquement
+
+### PHASE 2 — Système de sessions + QR Code
+
+- Génération de session ID sécurisé (ex: `A7K9-X2P4`)
+- QR Code affiché sur PC (librarie qrcode.js, CDN)
+- Connexion par scan ou saisie manuelle du code
+- État de connexion (PC affiche "PHONE CONNECTED ✓")
+
+### PHASE 3 — Mode RAW perfectionné
+
+- Stabilisation du trait (Smoother.js)
+- Gestion pression (pointerEvent.pressure)
+- Rendu haute résolution (devicePixelRatio)
+- Timestamps précis
+
+### PHASE 4 — Outils
+
+- Gomme (objet / zone)
+- Palette de couleurs
+- Épaisseur du trait
+- Undo/Redo (HistoryManager)
+
+### PHASE 5 — Mode SMART
+
+- Pipeline de reconnaissance (ShapeRecognizer)
+- Line, Circle, Rectangle, Triangle, Arrow
+- Score de confiance + confirmation utilisateur
+
+### PHASE 6 — Texte manuscrit (HandwritingRecognizer)
+
+- Architecture abstraite
+- Intégration stub (à remplacer par OCR réel)
+
+### PHASE 7 — Export
+
+- PNG, SVG, JSON
+- Sauvegarde/chargement côté serveur PHP
+
+---
+
+## Questions ouvertes
+
+> [!IMPORTANT]
+> **PHP disponible ?** L'implémentation suppose un serveur PHP accessible depuis le LAN. Confirmer que PHP 8+ et Composer sont disponibles sur la machine serveur.
+
+> [!IMPORTANT]
+> **Port WebSocket** : Le serveur Ratchet utilisera le port **8080** par défaut. Ce port doit être ouvert dans le pare-feu Windows. Confirmer si c'est possible, ou indiquer un autre port.
+
+> [!NOTE]
+> **Fallback sans Ratchet** : Si PHP/Composer n'est pas disponible, une alternative entièrement en JavaScript (serveur Node.js simple) peut être proposée. Mais le projet demande PHP comme backend principal.
+
+> [!NOTE]
+> **Hébergement** : L'application est prévue pour tourner sur le PC de l'enseignant (WAMP, XAMPP, Laragon, ou Apache autonome). Le smartphone se connecte via le réseau WiFi local.
+
+---
+
+## Plan de vérification
+
+1. Démarrer le serveur WebSocket (`php bin/server.php`)
+2. Ouvrir `http://192.168.x.x/pc.html` sur le PC
+3. Ouvrir `http://192.168.x.x/mobile.html` sur le smartphone
+4. Vérifier la connexion WebSocket (panneau debug)
+5. Dessiner sur le smartphone → vérifier apparition sur le PC
+6. Mesurer la latence (objectif < 30ms sur LAN)
