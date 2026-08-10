@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Whiteboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0d0d1a;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: #6c63ff;
+        }
+        p {
+            font-size: 1.2rem;
+            color: rgba(232,232,240,0.7);
+            margin-bottom: 3rem;
+        }
+        .cards {
+            display: flex;
+            gap: 2rem;
+        }
+        .card {
+            background: #1a1a2e;
+            padding: 3rem;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            width: 250px;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(108, 99, 255, 0.2);
+            border-color: #6c63ff;
+        }
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <h1>⬡ Smart Whiteboard</h1>
+    <p>La solution de tableau blanc collaboratif</p>
+    
+    <div class="cards">
+        <a href="/pc.html" class="card">
+            <div class="card-icon">💻</div>
+            <div class="card-title">PC / Tableau</div>
+        </a>
+        <a href="/mobile.html" class="card">
+            <div class="card-icon">📱</div>
+            <div class="card-title">Mobile / Téléphone</div>
+        </a>
+    </div>
+
+    <script>
+        if (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent)) {
+            window.location.href = '/mobile.html' + window.location.search;
+        }
+    </script>
+</body>
+</html>

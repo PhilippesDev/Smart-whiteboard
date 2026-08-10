@@ -1,0 +1,12 @@
+window.SW_CONFIG = {
+  WS_PORT: 8080,
+  WS_HOST: window.location.hostname,
+  API_BASE: '/backend/api',
+  MAX_POINTS_PER_BATCH: 100,
+  BATCH_INTERVAL_MS: 16,
+  CONFIDENCE_THRESHOLD: 0.85,
+  AUTO_APPLY_THRESHOLD: 0.92,
+  SESSION_EXPIRY_HOURS: 24,
+  DEBUG: false,
+  VERSION: '1.0.0'
+};

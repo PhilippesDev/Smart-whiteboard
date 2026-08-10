@@ -1,0 +1,14 @@
+{
+    "require": {
+        "cboden/ratchet": "^0.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "SmartWhiteboard\\": "backend/"
+        }
+    },
+    "config": {
+        "disable-tls": true,
+        "secure-http": false
+    }
+}

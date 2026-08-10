@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Whiteboard - PC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <link rel="stylesheet" href="/assets/css/pc.css">
+</head>
+<body>
+    <header id="topbar">
+        <div class="logo">⬡ Smart Whiteboard</div>
+        <div class="session-info">
+            <div id="session-code">Session: ----</div>
+            <div id="qr-container"></div>
+        </div>
+        <div id="connection-status">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">Connecting...</span>
+        </div>
+        <div class="topbar-actions">
+            <button id="btn-export-png" title="Exporter en PNG">📥 PNG</button>
+            <button id="btn-export-svg" title="Exporter en SVG">📐 SVG</button>
+            <button id="btn-export-json" title="Exporter en JSON">💾 JSON</button>
+            <button id="btn-import" title="Importer depuis JSON">📂 Ouvrir</button>
+            <button id="btn-clear-all" title="Tout effacer">🗑️ Vider</button>
+            <button id="btn-settings" title="Paramètres">⚙️</button>
+        </div>
+    </header>
+    
+    <main id="main-layout">
+        <aside id="sidebar">
+            <div class="tool-group">
+                <button class="tool-btn active" id="tool-pen" title="Stylo" data-tool="pen">✏️</button>
+                <button class="tool-btn" id="tool-eraser" title="Gomme" data-tool="eraser">🧽</button>
+                <button class="tool-btn" id="tool-select" title="Sélection" data-tool="select">🖱️</button>
+            </div>
+            <div class="tool-separator"></div>
+            <div class="tool-group">
+                <button class="tool-btn" id="tool-line" title="Ligne" data-tool="line">📏</button>
+                <button class="tool-btn" id="tool-circle" title="Cercle" data-tool="circle">⭕</button>
+                <button class="tool-btn" id="tool-rect" title="Rectangle" data-tool="rectangle">▭</button>
+                <button class="tool-btn" id="tool-triangle" title="Triangle" data-tool="triangle">△</button>
+                <button class="tool-btn" id="tool-arrow" title="Flèche" data-tool="arrow">➤</button>
+                <button class="tool-btn" id="tool-text" title="Texte" data-tool="text">T</button>
+            </div>
+            <div class="tool-separator"></div>
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-undo" title="Annuler">↶</button>
+                <button class="tool-btn" id="btn-redo" title="Rétablir">↷</button>
+            </div>
+            <div class="tool-separator"></div>
+            
+            <div class="color-section">
+                <input type="color" id="color-picker" value="#000000">
+            </div>
+            
+            <div class="width-section">
+                <input type="range" id="width-slider" min="1" max="20" value="3" orient="vertical">
+                <span id="width-display">3px</span>
+            </div>
+        </aside>
+        
+        <div id="canvas-container">
+            <canvas id="whiteboard-canvas"></canvas>
+            
+            <div id="recognition-overlay" class="hidden">
+                <div class="recognition-card">
+                    <p id="recognition-text">Forme détectée</p>
+                    <div class="recognition-actions">
+                        <button id="btn-accept-recognition">✓ Conserver</button>
+                        <button id="btn-reject-recognition">✗ Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <aside id="right-panel" class="hidden">
+            <div class="panel-section">
+                <h3>Mode de tracé</h3>
+                <div class="mode-tabs">
+                    <button class="mode-tab" data-mode="raw">✍️ RAW</button>
+                    <button class="mode-tab active" data-mode="hybrid">⚡ Hybride</button>
+                    <button class="mode-tab" data-mode="smart">🧠 SMART</button>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>Police</h3>
+                <select id="font-family" style="width:100%; padding: 8px; margin-bottom: 8px;">
+                    <option>Inter</option>
+                    <option>Arial</option>
+                    <option>Roboto</option>
+                    <option>Times New Roman</option>
+                    <option>Courier New</option>
+                </select>
+            </div>
+            
+            <div class="panel-section">
+                <h3>Zoom</h3>
+                <div style="display:flex; gap: 8px;">
+                    <button id="btn-zoom-in" style="flex:1;">+</button>
+                    <button id="btn-zoom-out" style="flex:1;">−</button>
+                </div>
+                <div style="display:flex; gap: 8px; margin-top: 8px;">
+                    <button id="btn-zoom-fit" style="flex:1;">Ajuster</button>
+                    <button id="btn-zoom-reset" style="flex:1;">100%</button>
+                </div>
+                <div style="text-align: center; margin-top: 8px;" id="zoom-display">100%</div>
+            </div>
+        </aside>
+    </main>
+    
+    <footer id="statusbar">
+        <span id="stat-mode">Mode: Hybride</span>
+        <span>|</span>
+        <span id="stat-zoom">Zoom: 100%</span>
+        <span>|</span>
+        <span id="stat-width">Trait: 3px</span>
+        <span>|</span>
+        <span id="stat-fps">FPS: --</span>
+        <span>|</span>
+        <span id="stat-latency">Latence: -- ms</span>
+        <span>|</span>
+        <span id="stat-objects">Objets: 0</span>
+        
+        <button id="btn-debug" title="Debug Panel">🔧</button>
+    </footer>
+    
+    <div id="debug-panel" class="hidden" style="position:fixed; bottom: 40px; right: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 8px; z-index: 1000;">
+        <h3>Debug Panel</h3>
+        <button id="btn-close-debug" style="position:absolute; top: 10px; right: 10px; background:transparent; color:white; border:none; cursor:pointer;">×</button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/assets/js/common/WebSocketClient.js"></script>
+    <script src="/assets/js/common/SessionManager.js"></script>
+    <script src="/assets/js/pc/recognition/LineRecognizer.js"></script>
+    <script src="/assets/js/pc/recognition/CircleRecognizer.js"></script>
+    <script src="/assets/js/pc/recognition/RectangleRecognizer.js"></script>
+    <script src="/assets/js/pc/recognition/TriangleRecognizer.js"></script>
+    <script src="/assets/js/pc/recognition/ArrowRecognizer.js"></script>
+    <script src="/assets/js/pc/recognition/HandwritingRecognizer.js"></script>
+    <script src="/assets/js/pc/recognition/ShapeRecognizer.js"></script>
+    <script src="/assets/js/pc/CanvasRenderer.js"></script>
+    <script src="/assets/js/pc/Viewport.js"></script>
+    <script src="/assets/js/pc/HistoryManager.js"></script>
+    <script src="/assets/js/pc/ToolManager.js"></script>
+    <script src="/assets/js/pc/ExportManager.js"></script>
+    <script src="/assets/js/pc/PCApp.js"></script>
+</body>
+</html>

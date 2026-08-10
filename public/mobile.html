@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Whiteboard - Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <link rel="stylesheet" href="/assets/css/mobile.css">
+</head>
+<body>
+
+    <!-- Join Screen -->
+    <div id="joinScreen">
+        <div class="glass-panel join-card">
+            <h1 class="title-gradient">Smart Whiteboard</h1>
+            <div class="input-group">
+                <input type="text" id="sessionInput" placeholder="XXXX-XXXX" maxlength="9">
+            </div>
+            <button id="connectBtn" class="primary-btn">Connect</button>
+            <div class="divider">OR</div>
+            <button class="primary-btn" style="background: rgba(255,255,255,0.1);">
+                📷 Scan QR Code
+            </button>
+        </div>
+    </div>
+
+    <!-- Drawing Screen -->
+    <div id="drawScreen">
+        <div class="status-bar">
+            <div>
+                <span id="statusDot" class="status-dot red"></span>
+                <span id="sessionCodeDisplay">----</span>
+            </div>
+            <div>🔋 100%</div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="drawCanvas"></canvas>
+        </div>
+
+        <!-- Settings Slide-up Panel -->
+        <div id="settingsPanel" class="settings-panel glass-panel">
+            <div class="settings-row">
+                <span class="settings-label">Stroke Width</span>
+                <input type="range" id="sliderWidth" min="1" max="20" value="4">
+            </div>
+            
+            <div class="settings-row">
+                <span class="settings-label">Processing Mode</span>
+                <div class="tabs">
+                    <div class="tab active" data-mode="raw">RAW</div>
+                    <div class="tab" data-mode="hybrid">HYBRID</div>
+                    <div class="tab" data-mode="smart">SMART</div>
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <span class="settings-label">Smoothing Level</span>
+                <div class="tabs">
+                    <label class="tab active"><input type="radio" name="smoothing" value="0" checked style="display:none"> 0</label>
+                    <label class="tab"><input type="radio" name="smoothing" value="1" style="display:none"> 1</label>
+                    <label class="tab"><input type="radio" name="smoothing" value="2" style="display:none"> 2</label>
+                    <label class="tab"><input type="radio" name="smoothing" value="3" style="display:none"> 3</label>
+                </div>
+            </div>
+
+            <button id="btnClear" class="danger-btn">🗑️ Clear Canvas</button>
+        </div>
+
+        <!-- Bottom Toolbar -->
+        <div class="toolbar glass-panel">
+            <button id="toolPen" class="tool-btn active">✏️</button>
+            <button id="toolEraser" class="tool-btn">🧽</button>
+            <input type="color" id="colorPicker" class="color-input" value="#000000">
+            <button id="btnUndo" class="tool-btn">↶</button>
+            <button id="btnRedo" class="tool-btn">↷</button>
+            <button id="btnSettings" class="tool-btn">⚙️</button>
+        </div>
+    </div>
+
+    <!-- Configuration -->
+    <script src="config.js"></script>
+    
+    <!-- Scripts -->
+    <script src="/assets/js/common/WebSocketClient.js"></script>
+    <script src="/assets/js/common/SessionManager.js"></script>
+    <script src="/assets/js/mobile/Smoother.js"></script>
+    <script src="/assets/js/mobile/PointerManager.js"></script>
+    <script src="/assets/js/mobile/StrokeTransmitter.js"></script>
+    <script src="/assets/js/mobile/MobileApp.js"></script>
+</body>
+</html>
