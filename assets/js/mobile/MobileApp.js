@@ -22,6 +22,7 @@ window.MobileApp = class MobileApp {
         
         this.initDOM();
         this.initEvents();
+        this.initBattery();
         this.resizeCanvas();
         
         window.addEventListener('resize', () => this.resizeCanvas());
@@ -40,6 +41,7 @@ window.MobileApp = class MobileApp {
         this.drawScreen = document.getElementById('drawScreen');
         this.sessionInput = document.getElementById('sessionInput');
         this.connectBtn = document.getElementById('connectBtn');
+        this.joinError = document.getElementById('joinError');
         
         this.statusDot = document.getElementById('statusDot');
         this.sessionCodeDisplay = document.getElementById('sessionCodeDisplay');
@@ -55,20 +57,30 @@ window.MobileApp = class MobileApp {
         this.sliderWidth = document.getElementById('sliderWidth');
         this.btnClear = document.getElementById('btnClear');
         
-        // Settings bindings
-        document.querySelectorAll('input[name="smoothing"]').forEach(el => {
+        // Lissage : radios masquées, état visuel porté par les onglets du groupe
+        document.querySelectorAll('[data-group="smoothing"] input[name="smoothing"]').forEach(el => {
             el.addEventListener('change', (e) => {
-                this.state.smoothingLevel = parseInt(e.target.value);
+                this.state.smoothingLevel = parseInt(e.target.value, 10);
                 this.smoother.level = this.state.smoothingLevel;
+                this.syncGroup('smoothing', e.target.closest('.tab'));
             });
         });
         
-        document.querySelectorAll('.tab').forEach(el => {
-            el.addEventListener('click', (e) => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                e.target.classList.add('active');
-                this.state.mode = e.target.dataset.mode;
+        // Modes de traitement (RAW / HYBRIDE / SMART)
+        document.querySelectorAll('[data-group="mode"] .tab').forEach(el => {
+            el.addEventListener('click', () => {
+                this.state.mode = el.dataset.mode;
+                this.syncGroup('mode', el);
             });
+        });
+    }
+
+    /** Met à jour l'onglet actif d'un groupe segmenté. */
+    syncGroup(group, activeTab) {
+        document.querySelectorAll(`[data-group="${group}"] .tab`).forEach(tab => {
+            const isActive = tab === activeTab;
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
     }
 
@@ -77,6 +89,11 @@ window.MobileApp = class MobileApp {
             let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             if (val.length > 4) val = val.slice(0, 4) + '-' + val.slice(4, 8);
             e.target.value = val;
+            this.showError(null);
+        });
+
+        this.sessionInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.connectBtn.click();
         });
 
         this.connectBtn.addEventListener('click', () => {
@@ -84,7 +101,7 @@ window.MobileApp = class MobileApp {
             if (code.length === 9) {
                 this.joinSession(code);
             } else {
-                alert("Please enter a valid session code (XXXX-XXXX)");
+                this.showError('Code invalide — format attendu : XXXX-XXXX.');
             }
         });
 
@@ -106,16 +123,47 @@ window.MobileApp = class MobileApp {
         this.btnClear.addEventListener('click', () => {
             this.transmitter.sendCommand('clear');
             this.clearLocalCanvas();
-            this.settingsPanel.classList.remove('active');
+            this.setSettingsOpen(false);
         });
         
         this.btnSettings.addEventListener('click', () => {
-            this.settingsPanel.classList.toggle('active');
+            this.setSettingsOpen(!this.settingsPanel.classList.contains('active'));
         });
         
         this.sliderWidth.addEventListener('input', (e) => {
-            this.state.width = parseInt(e.target.value);
+            this.state.width = parseInt(e.target.value, 10);
+            const value = document.getElementById('widthValue');
+            if (value) value.textContent = `${e.target.value} px`;
         });
+    }
+
+    /** Affiche (ou masque) un message d'erreur sous le champ de code. */
+    showError(message) {
+        if (!this.joinError) return;
+        this.joinError.textContent = message || '';
+        this.joinError.classList.toggle('hidden', !message);
+    }
+
+    setSettingsOpen(open) {
+        this.settingsPanel.classList.toggle('active', open);
+        this.btnSettings.classList.toggle('is-open', open);
+        this.btnSettings.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    /** Niveau de batterie réel, affiché seulement si l'API est disponible. */
+    initBattery() {
+        const block = document.getElementById('batteryBlock');
+        const level = document.getElementById('batteryLevel');
+        if (!block || !level || typeof navigator.getBattery !== 'function') return;
+
+        navigator.getBattery().then((battery) => {
+            const render = () => {
+                block.classList.remove('is-unknown');
+                level.textContent = `${Math.round(battery.level * 100)} %`;
+            };
+            render();
+            battery.addEventListener('levelchange', render);
+        }).catch(() => { /* API refusée : l'indicateur reste masqué */ });
     }
 
     resizeCanvas() {
@@ -135,6 +183,7 @@ window.MobileApp = class MobileApp {
     }
 
     async joinSession(code) {
+        this.showError(null);
         try {
             await this.ws.connect();
             await this.sessionManager.joinSession(code, 'mobile');
@@ -144,7 +193,7 @@ window.MobileApp = class MobileApp {
             this.sessionCodeDisplay.textContent = code;
             this.resizeCanvas();
         } catch (e) {
-            alert("Connection failed: " + e.message);
+            this.showError('Connexion impossible : ' + e.message);
         }
     }
 
@@ -154,9 +203,18 @@ window.MobileApp = class MobileApp {
 
     setTool(tool) {
         this.state.tool = tool;
-        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-        if (tool === 'pen') this.toolPen.classList.add('active');
-        if (tool === 'eraser') this.toolEraser.classList.add('active');
+        document.querySelectorAll('.tool-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        if (tool === 'pen') {
+            this.toolPen.classList.add('active');
+            this.toolPen.setAttribute('aria-pressed', 'true');
+        }
+        if (tool === 'eraser') {
+            this.toolEraser.classList.add('active');
+            this.toolEraser.setAttribute('aria-pressed', 'true');
+        }
     }
 
     generateId() {
@@ -168,7 +226,8 @@ window.MobileApp = class MobileApp {
         this.smoother.reset();
         
         const effectiveTool = isEraserHardware ? 'eraser' : this.state.tool;
-        const color = effectiveTool === 'eraser' ? '#000000' : this.state.color; // backend can handle black as erase or use tool type
+        this.activeTool = effectiveTool;
+        const color = effectiveTool === 'eraser' ? '#000000' : this.state.color; // le serveur reçoit le type d'outil
         
         this.transmitter.startStroke(
             this.currentStrokeId,
@@ -182,7 +241,8 @@ window.MobileApp = class MobileApp {
         this.smoother.addPoint(x, y, pressure);
         this.transmitter.addPoint(this.currentStrokeId, x, y, pressure);
         
-        // Local rendering start
+        // Rendu local immédiat : la gomme efface réellement (pas de trait sombre)
+        this.ctx.globalCompositeOperation = (effectiveTool === 'eraser') ? 'destination-out' : 'source-over';
         this.ctx.beginPath();
         const px = x * this.canvas.offsetWidth;
         const py = y * this.canvas.offsetHeight;
@@ -198,12 +258,12 @@ window.MobileApp = class MobileApp {
         this.smoother.addPoint(x, y, pressure);
         this.transmitter.addPoint(this.currentStrokeId, x, y, pressure);
         
-        // Quick local feedback (unsmoothed for zero latency feel)
+        // Retour immédiat (non lissé) pour une sensation sans latence
         const px = x * this.canvas.offsetWidth;
         const py = y * this.canvas.offsetHeight;
         
         this.ctx.lineTo(px, py);
-        this.ctx.strokeStyle = this.state.tool === 'eraser' ? '#1a1a2e' : this.state.color; // Hack for local eraser visualization
+        this.ctx.strokeStyle = this.activeTool === 'eraser' ? '#000000' : this.state.color;
         this.ctx.lineWidth = this.state.width;
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
@@ -218,6 +278,7 @@ window.MobileApp = class MobileApp {
         
         this.transmitter.endStroke(this.currentStrokeId);
         this.currentStrokeId = null;
+        this.ctx.globalCompositeOperation = 'source-over';
         
         // Optional: Redraw local stroke with smoothed points for perfect fidelity
     }

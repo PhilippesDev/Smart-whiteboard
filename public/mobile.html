@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Whiteboard - Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#14171c">
+    <title>Smart Whiteboard — Mobile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,79 +12,113 @@
     <link rel="stylesheet" href="/assets/css/mobile.css">
 </head>
 <body>
+    <!-- Bibliothèque d'icônes : injecte le sprite SVG avant tout rendu -->
+    <script src="/assets/js/common/Icons.js"></script>
 
-    <!-- Join Screen -->
+    <!-- Écran de connexion -->
     <div id="joinScreen">
-        <div class="glass-panel join-card">
-            <h1 class="title-gradient">Smart Whiteboard</h1>
-            <div class="input-group">
-                <input type="text" id="sessionInput" placeholder="XXXX-XXXX" maxlength="9">
+        <div class="join-card">
+            <div class="join-brand">
+                <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>
+                <h1 class="join-title">Smart Whiteboard</h1>
             </div>
-            <button id="connectBtn" class="primary-btn">Connect</button>
-            <div class="divider">OR</div>
-            <button class="primary-btn" style="background: rgba(255,255,255,0.1);">
-                📷 Scan QR Code
+            <p class="join-sub">Scannez le QR code affiché sur le PC,<br>ou saisissez le code de session.</p>
+
+            <div class="input-group">
+                <label class="field-label" for="sessionInput">Code de session</label>
+                <input type="text" id="sessionInput" inputmode="text" autocomplete="off"
+                       autocapitalize="characters" spellcheck="false"
+                       placeholder="XXXX-XXXX" maxlength="9" aria-label="Code de session">
+            </div>
+
+            <button type="button" id="connectBtn" class="primary-btn">
+                Rejoindre la session
             </button>
+            <p id="joinError" class="join-error hidden" role="alert"></p>
         </div>
     </div>
 
-    <!-- Drawing Screen -->
+    <!-- Écran de dessin -->
     <div id="drawScreen">
         <div class="status-bar">
-            <div>
+            <div class="status-group">
                 <span id="statusDot" class="status-dot red"></span>
-                <span id="sessionCodeDisplay">----</span>
+                <span id="sessionCodeDisplay" class="session-code">----</span>
             </div>
-            <div>🔋 100%</div>
+            <div class="battery is-unknown" id="batteryBlock">
+                <svg class="icon" aria-hidden="true"><use href="#i-battery"></use></svg>
+                <span id="batteryLevel">--</span>
+            </div>
         </div>
 
         <div class="canvas-container">
             <canvas id="drawCanvas"></canvas>
         </div>
 
-        <!-- Settings Slide-up Panel -->
-        <div id="settingsPanel" class="settings-panel glass-panel">
+        <!-- Réglages (panneau glissant) -->
+        <div id="settingsPanel" class="settings-panel">
+            <div class="sheet-handle" aria-hidden="true"></div>
+
             <div class="settings-row">
-                <span class="settings-label">Stroke Width</span>
-                <input type="range" id="sliderWidth" min="1" max="20" value="4">
-            </div>
-            
-            <div class="settings-row">
-                <span class="settings-label">Processing Mode</span>
-                <div class="tabs">
-                    <div class="tab active" data-mode="raw">RAW</div>
-                    <div class="tab" data-mode="hybrid">HYBRID</div>
-                    <div class="tab" data-mode="smart">SMART</div>
+                <div class="settings-head">
+                    <label class="settings-label" for="sliderWidth">Épaisseur du trait</label>
+                    <span id="widthValue" class="settings-value">4 px</span>
                 </div>
+                <input type="range" id="sliderWidth" class="range" min="1" max="20" value="4">
             </div>
-            
+
             <div class="settings-row">
-                <span class="settings-label">Smoothing Level</span>
-                <div class="tabs">
-                    <label class="tab active"><input type="radio" name="smoothing" value="0" checked style="display:none"> 0</label>
-                    <label class="tab"><input type="radio" name="smoothing" value="1" style="display:none"> 1</label>
-                    <label class="tab"><input type="radio" name="smoothing" value="2" style="display:none"> 2</label>
-                    <label class="tab"><input type="radio" name="smoothing" value="3" style="display:none"> 3</label>
+                <span class="settings-label">Mode de traitement</span>
+                <div class="tabs" data-group="mode" role="tablist" aria-label="Mode de traitement">
+                    <button type="button" class="tab active" data-mode="raw" role="tab" aria-selected="true">RAW</button>
+                    <button type="button" class="tab" data-mode="hybrid" role="tab" aria-selected="false">HYBRIDE</button>
+                    <button type="button" class="tab" data-mode="smart" role="tab" aria-selected="false">SMART</button>
                 </div>
             </div>
 
-            <button id="btnClear" class="danger-btn">🗑️ Clear Canvas</button>
+            <div class="settings-row">
+                <span class="settings-label">Lissage</span>
+                <div class="tabs" data-group="smoothing" role="group" aria-label="Niveau de lissage">
+                    <label class="tab active"><input type="radio" name="smoothing" value="0" checked>0</label>
+                    <label class="tab"><input type="radio" name="smoothing" value="1">1</label>
+                    <label class="tab"><input type="radio" name="smoothing" value="2">2</label>
+                    <label class="tab"><input type="radio" name="smoothing" value="3">3</label>
+                </div>
+            </div>
+
+            <button type="button" id="btnClear" class="danger-btn">
+                <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>
+                Effacer le tableau
+            </button>
         </div>
 
-        <!-- Bottom Toolbar -->
-        <div class="toolbar glass-panel">
-            <button id="toolPen" class="tool-btn active">✏️</button>
-            <button id="toolEraser" class="tool-btn">🧽</button>
-            <input type="color" id="colorPicker" class="color-input" value="#000000">
-            <button id="btnUndo" class="tool-btn">↶</button>
-            <button id="btnRedo" class="tool-btn">↷</button>
-            <button id="btnSettings" class="tool-btn">⚙️</button>
+        <!-- Barre d'outils -->
+        <div class="toolbar">
+            <button type="button" id="toolPen" class="tool-btn active" aria-label="Stylo" aria-pressed="true">
+                <svg class="icon" aria-hidden="true"><use href="#i-pen"></use></svg>
+            </button>
+            <button type="button" id="toolEraser" class="tool-btn" aria-label="Gomme" aria-pressed="false">
+                <svg class="icon" aria-hidden="true"><use href="#i-eraser"></use></svg>
+            </button>
+            <label class="color-input" aria-label="Couleur du trait">
+                <span class="sr-only">Couleur du trait</span>
+                <input type="color" id="colorPicker" value="#000000" aria-label="Couleur du trait">
+            </label>
+            <button type="button" id="btnUndo" class="tool-btn" aria-label="Annuler">
+                <svg class="icon" aria-hidden="true"><use href="#i-undo"></use></svg>
+            </button>
+            <button type="button" id="btnRedo" class="tool-btn" aria-label="Rétablir">
+                <svg class="icon" aria-hidden="true"><use href="#i-redo"></use></svg>
+            </button>
+            <button type="button" id="btnSettings" class="tool-btn" aria-label="Réglages" aria-expanded="false">
+                <svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg>
+            </button>
         </div>
     </div>
 
     <!-- Configuration -->
     <script src="config.js"></script>
-    
+
     <!-- Scripts -->
     <script src="/assets/js/common/WebSocketClient.js"></script>
     <script src="/assets/js/common/SessionManager.js"></script>

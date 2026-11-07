@@ -3,75 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#14171c">
     <title>Smart Whiteboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/common.css">
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background: #0d0d1a;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-            color: #6c63ff;
-        }
-        p {
-            font-size: 1.2rem;
-            color: rgba(232,232,240,0.7);
-            margin-bottom: 3rem;
-        }
-        .cards {
-            display: flex;
-            gap: 2rem;
-        }
-        .card {
-            background: #1a1a2e;
-            padding: 3rem;
-            border-radius: 12px;
+            min-height: 100vh;
+            padding: 40px 24px;
             text-align: center;
-            text-decoration: none;
-            color: #fff;
-            width: 250px;
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(108, 99, 255, 0.2);
-            border-color: #6c63ff;
+
+        .home-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
         }
-        .card-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
+
+        .home-brand .icon {
+            width: 28px;
+            height: 28px;
+            color: var(--accent);
+            stroke-width: 1.6;
         }
-        .card-title {
-            font-size: 1.5rem;
+
+        .home-title {
+            font-size: 22px;
             font-weight: 600;
+            letter-spacing: -0.015em;
+        }
+
+        .home-sub {
+            margin: 0 0 34px;
+            max-width: 420px;
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: var(--text-muted);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 20px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            color: var(--text);
+            text-decoration: none;
+            text-align: left;
+            transition: border-color var(--transition), background-color var(--transition);
+        }
+
+        .card:hover {
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+        }
+
+        .card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .card-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface-1);
+            color: var(--accent);
+        }
+
+        .card-title {
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            line-height: 1.45;
+            color: var(--text-faint);
+        }
+
+        .home-foot {
+            margin-top: 34px;
+            font-size: 11.5px;
+            color: var(--text-faint);
+        }
+
+        @media (max-width: 520px) {
+            .cards {
+                grid-template-columns: minmax(0, 1fr);
+            }
         }
     </style>
 </head>
 <body>
-    <h1>⬡ Smart Whiteboard</h1>
-    <p>La solution de tableau blanc collaboratif</p>
-    
+    <script src="/assets/js/common/Icons.js"></script>
+
+    <div class="home-brand">
+        <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>
+        <h1 class="home-title">Smart Whiteboard</h1>
+    </div>
+    <p class="home-sub">Transformez votre téléphone en tablette graphique : dessinez sur le mobile, le tableau s'affiche en temps réel sur le PC.</p>
+
     <div class="cards">
         <a href="/public/pc.html" class="card">
-            <div class="card-icon">💻</div>
-            <div class="card-title">PC / Tableau</div>
+            <span class="card-icon">
+                <svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg>
+            </span>
+            <span class="card-title">Tableau — PC</span>
+            <span class="card-desc">Affichage, outils et export</span>
         </a>
         <a href="/public/mobile.html" class="card">
-            <div class="card-icon">📱</div>
-            <div class="card-title">Mobile / Téléphone</div>
+            <span class="card-icon">
+                <svg class="icon" aria-hidden="true"><use href="#i-smartphone"></use></svg>
+            </span>
+            <span class="card-title">Téléphone — Mobile</span>
+            <span class="card-desc">Surface de dessin tactile</span>
         </a>
     </div>
+
+    <p class="home-foot">Réseau local · port WebSocket 8080</p>
 
     <script>
         if (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent)) {

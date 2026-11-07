@@ -23,8 +23,34 @@ window.PCApp = class PCApp {
         this.exportManager = new window.ExportManager(this.canvasRenderer, this);
         
         this.setupUI();
+        this.setupShortcuts();
         this.connect();
         this.startFPSCounter();
+    }
+
+    /** Raccourcis clavier (documentés par les infobulles du rail). */
+    setupShortcuts() {
+        window.addEventListener('keydown', (e) => {
+            const target = e.target;
+            if (target && target.matches && target.matches('input, select, textarea')) return;
+
+            const mod = e.ctrlKey || e.metaKey;
+            const key = (e.key || '').toLowerCase();
+
+            if (mod && key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                this.undo();
+            } else if (mod && (key === 'y' || (key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                this.redo();
+            } else if (e.key === 'Escape') {
+                if (!document.getElementById('right-panel').classList.contains('hidden')) {
+                    this.toggleSettings(false);
+                } else if (!document.getElementById('debug-panel').classList.contains('hidden')) {
+                    this.toggleDebug(false);
+                }
+            }
+        });
     }
 
     connect() {
@@ -65,7 +91,7 @@ window.PCApp = class PCApp {
         switch (msg.type) {
             case 'session_created':
                 this.sessionId = msg.session_id;
-                document.getElementById('session-code').textContent = `Session: ${this.sessionId}`;
+                document.getElementById('session-code').textContent = this.sessionId;
                 this.generateQRCode();
                 break;
             case 'phone_connected':
@@ -206,12 +232,22 @@ window.PCApp = class PCApp {
         if (document.getElementById('btn-settings')) {
             document.getElementById('btn-settings').onclick = () => this.toggleSettings();
         }
+        if (document.getElementById('btn-panel-close')) {
+            document.getElementById('btn-panel-close').onclick = () => this.toggleSettings(false);
+        }
+        if (document.getElementById('btn-close-debug')) {
+            document.getElementById('btn-close-debug').onclick = () => this.toggleDebug(false);
+        }
         
         // Mode tabs
         document.querySelectorAll('.mode-tab').forEach(tab => {
             tab.onclick = () => {
-                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.mode-tab').forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
                 tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
                 this.toolManager.setMode(tab.dataset.mode);
                 this.updateModeDisplay();
             };
@@ -235,8 +271,12 @@ window.PCApp = class PCApp {
         document.querySelectorAll('.tool-btn').forEach(btn => {
             if(btn.id !== 'btn-undo' && btn.id !== 'btn-redo') {
                 btn.onclick = () => {
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tool-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
                     btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
                     if (btn.dataset.tool) this.toolManager.setTool(btn.dataset.tool);
                 };
             }
@@ -249,7 +289,8 @@ window.PCApp = class PCApp {
         const widthSlider = document.getElementById('width-slider');
         if (widthSlider) widthSlider.oninput = (e) => {
             this.toolManager.setWidth(parseInt(e.target.value));
-            document.getElementById('width-display').textContent = `${e.target.value}px`;
+            document.getElementById('width-display').textContent = `${e.target.value} px`;
+            document.getElementById('stat-width').textContent = `${e.target.value} px`;
         };
     }
 
@@ -274,33 +315,32 @@ window.PCApp = class PCApp {
         const dot  = document.getElementById('status-dot');
         const text = document.getElementById('status-text');
         const statusMap = {
-            'phone_connected': { bg: '#6c63ff', shadow: 'rgba(108,99,255,0.6)', label: '📱 Téléphone connecté' },
-            'connected':       { bg: '#00d4aa', shadow: 'rgba(0,212,170,0.5)', label: '🟢 Serveur connecté' },
-            'connecting':      { bg: '#ffd166', shadow: 'rgba(255,209,102,0.5)', label: '⏳ Connexion...' },
-            'disconnected':    { bg: '#ef4444', shadow: 'rgba(239,68,68,0.5)', label: '🔴 Déconnecté' },
+            'phone_connected': { state: 'phone',    label: 'Téléphone connecté' },
+            'connected':       { state: 'online',   label: 'Serveur connecté' },
+            'connecting':      { state: 'pending',  label: 'Connexion…' },
+            'disconnected':    { state: 'offline',  label: 'Déconnecté' },
         };
         const s = statusMap[status] || statusMap['disconnected'];
-        dot.style.background  = s.bg;
-        dot.style.boxShadow   = `0 0 10px ${s.shadow}`;
-        text.textContent      = s.label;
+        dot.dataset.state = s.state;
+        text.textContent  = s.label;
     }
     
     updateModeDisplay() {
         const modeMap = { 'raw': 'RAW', 'hybrid': 'Hybride', 'smart': 'SMART' };
-        document.getElementById('stat-mode').textContent = `Mode: ${modeMap[this.toolManager.mode] || this.toolManager.mode}`;
+        document.getElementById('stat-mode').textContent = modeMap[this.toolManager.mode] || this.toolManager.mode;
     }
     
     updateZoomDisplay() {
         const zoom = this.viewport.getZoomPercentage();
-        document.getElementById('stat-zoom').textContent = `Zoom: ${zoom}%`;
+        document.getElementById('stat-zoom').textContent = `${zoom} %`;
         const zDisplay = document.getElementById('zoom-display');
-        if (zDisplay) zDisplay.textContent = `${zoom}%`;
+        if (zDisplay) zDisplay.textContent = `${zoom} %`;
     }
     
     updateStats() {
-        document.getElementById('stat-objects').textContent = `Objets: ${this.objects.length}`;
+        document.getElementById('stat-objects').textContent = this.objects.length;
         const wDisplay = document.getElementById('stat-width');
-        if (wDisplay) wDisplay.textContent = `Trait: ${this.toolManager.currentWidth}px`;
+        if (wDisplay) wDisplay.textContent = `${this.toolManager.currentWidth} px`;
     }
 
     startFPSCounter() {
@@ -310,7 +350,7 @@ window.PCApp = class PCApp {
                 this.fps = this.frameCount;
                 this.frameCount = 0;
                 this.lastFrameTime = now;
-                document.getElementById('stat-fps').textContent = `FPS: ${this.fps}`;
+                document.getElementById('stat-fps').textContent = this.fps;
             }
             requestAnimationFrame(loop);
         };
@@ -353,22 +393,30 @@ window.PCApp = class PCApp {
         this.tempRecognizedShape = null;
     }
 
-    toggleSettings() {
-        const panel = document.getElementById('right-panel');
-        if (panel.classList.contains('hidden')) {
-            panel.classList.remove('hidden');
-        } else {
-            panel.classList.add('hidden');
+    /**
+     * Affiche ou masque un panneau et reflète son état sur le bouton déclencheur.
+     * @param {string} panelId
+     * @param {string} buttonId
+     * @param {boolean} [visible] force l'état ; sinon bascule
+     */
+    setPanelVisible(panelId, buttonId, visible) {
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+        const show = (visible === undefined) ? panel.classList.contains('hidden') : visible;
+        panel.classList.toggle('hidden', !show);
+        const button = document.getElementById(buttonId);
+        if (button) {
+            button.classList.toggle('is-active', show);
+            button.setAttribute('aria-expanded', show ? 'true' : 'false');
         }
     }
+
+    toggleSettings(visible) {
+        this.setPanelVisible('right-panel', 'btn-settings', visible);
+    }
     
-    toggleDebug() {
-        const panel = document.getElementById('debug-panel');
-        if (panel.classList.contains('hidden')) {
-            panel.classList.remove('hidden');
-        } else {
-            panel.classList.add('hidden');
-        }
+    toggleDebug(visible) {
+        this.setPanelVisible('debug-panel', 'btn-debug', visible);
     }
 };
 

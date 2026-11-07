@@ -3,134 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Whiteboard - PC</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#14171c">
+    <title>Smart Whiteboard — Tableau</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/common.css">
     <link rel="stylesheet" href="/assets/css/pc.css">
 </head>
 <body>
+    <!-- Bibliothèque d'icônes : injecte le sprite SVG avant tout rendu -->
+    <script src="/assets/js/common/Icons.js"></script>
+
     <header id="topbar">
-        <div class="logo">⬡ Smart Whiteboard</div>
-        <div class="session-info">
-            <div id="session-code">Session: ----</div>
-            <div id="qr-container"></div>
+        <div class="brand">
+            <svg class="icon brand-mark" aria-hidden="true"><use href="#i-board"></use></svg>
+            <span class="brand-name">Smart Whiteboard</span>
         </div>
-        <div id="connection-status">
-            <span class="status-dot" id="status-dot"></span>
-            <span id="status-text">Connecting...</span>
+
+        <div class="session-info" tabindex="0" aria-label="Code de session — survolez pour afficher le QR code">
+            <span class="session-label">Session</span>
+            <span id="session-code" class="session-code">----</span>
+            <span class="session-qr" aria-hidden="true">
+                <svg class="icon icon-xs"><use href="#i-qr"></use></svg>
+            </span>
+            <div id="qr-container" aria-hidden="true"></div>
         </div>
-        <div class="topbar-actions">
-            <button id="btn-export-png" title="Exporter en PNG">📥 PNG</button>
-            <button id="btn-export-svg" title="Exporter en SVG">📐 SVG</button>
-            <button id="btn-export-json" title="Exporter en JSON">💾 JSON</button>
-            <button id="btn-import" title="Importer depuis JSON">📂 Ouvrir</button>
-            <button id="btn-clear-all" title="Tout effacer">🗑️ Vider</button>
-            <button id="btn-settings" title="Paramètres">⚙️</button>
+
+        <div class="topbar-right">
+            <div id="connection-status" class="status-pill" role="status" aria-live="polite">
+                <span class="status-dot" id="status-dot" data-state="pending"></span>
+                <span id="status-text">Connexion…</span>
+            </div>
+
+            <div class="topbar-divider" aria-hidden="true"></div>
+
+            <div class="topbar-actions" role="toolbar" aria-label="Actions sur le tableau">
+                <button type="button" id="btn-export-png" class="icon-btn" data-tip="Exporter en PNG" aria-label="Exporter en PNG">
+                    <svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>
+                </button>
+                <button type="button" id="btn-export-svg" class="icon-btn" data-tip="Exporter en SVG" aria-label="Exporter en SVG">
+                    <svg class="icon" aria-hidden="true"><use href="#i-vector"></use></svg>
+                </button>
+                <button type="button" id="btn-export-json" class="icon-btn" data-tip="Exporter en JSON" aria-label="Exporter en JSON">
+                    <svg class="icon" aria-hidden="true"><use href="#i-braces"></use></svg>
+                </button>
+                <button type="button" id="btn-import" class="icon-btn" data-tip="Ouvrir un tableau" aria-label="Ouvrir un tableau">
+                    <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>
+                </button>
+                <button type="button" id="btn-clear-all" class="icon-btn is-danger" data-tip="Tout effacer" aria-label="Tout effacer">
+                    <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>
+                </button>
+                <button type="button" id="btn-settings" class="icon-btn" data-tip="Réglages" aria-label="Réglages">
+                    <svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg>
+                </button>
+            </div>
         </div>
     </header>
-    
+
     <main id="main-layout">
-        <aside id="sidebar">
-            <div class="tool-group">
-                <button class="tool-btn active" id="tool-pen" title="Stylo" data-tool="pen">✏️</button>
-                <button class="tool-btn" id="tool-eraser" title="Gomme" data-tool="eraser">🧽</button>
-                <button class="tool-btn" id="tool-select" title="Sélection" data-tool="select">🖱️</button>
+        <aside id="sidebar" aria-label="Outils de dessin">
+            <div class="tool-group" role="toolbar" aria-orientation="vertical" aria-label="Outils">
+                <button type="button" class="tool-btn active" id="tool-pen" data-tool="pen" data-tip="Stylo" data-tip-pos="right" aria-label="Stylo" aria-pressed="true">
+                    <svg class="icon" aria-hidden="true"><use href="#i-pen"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="tool-eraser" data-tool="eraser" data-tip="Gomme" data-tip-pos="right" aria-label="Gomme" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-eraser"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="tool-select" data-tool="select" data-tip="Sélection" data-tip-pos="right" aria-label="Sélection" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-pointer"></use></svg>
+                </button>
             </div>
-            <div class="tool-separator"></div>
-            <div class="tool-group">
-                <button class="tool-btn" id="tool-line" title="Ligne" data-tool="line">📏</button>
-                <button class="tool-btn" id="tool-circle" title="Cercle" data-tool="circle">⭕</button>
-                <button class="tool-btn" id="tool-rect" title="Rectangle" data-tool="rectangle">▭</button>
-                <button class="tool-btn" id="tool-triangle" title="Triangle" data-tool="triangle">△</button>
-                <button class="tool-btn" id="tool-arrow" title="Flèche" data-tool="arrow">➤</button>
-                <button class="tool-btn" id="tool-text" title="Texte" data-tool="text">T</button>
+
+            <div class="tool-separator" aria-hidden="true"></div>
+
+            <div class="tool-group" role="toolbar" aria-orientation="vertical" aria-label="Formes">
+                <button type="button" class="tool-btn" id="tool-line" data-tool="line" data-tip="Ligne" data-tip-pos="right" aria-label="Ligne" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-line"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="tool-circle" data-tool="circle" data-tip="Cercle" data-tip-pos="right" aria-label="Cercle" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-circle"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="tool-rect" data-tool="rectangle" data-tip="Rectangle" data-tip-pos="right" aria-label="Rectangle" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-rect"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="tool-triangle" data-tool="triangle" data-tip="Triangle" data-tip-pos="right" aria-label="Triangle" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-triangle"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="tool-arrow" data-tool="arrow" data-tip="Flèche" data-tip-pos="right" aria-label="Flèche" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="tool-text" data-tool="text" data-tip="Texte" data-tip-pos="right" aria-label="Texte" aria-pressed="false">
+                    <svg class="icon" aria-hidden="true"><use href="#i-text"></use></svg>
+                </button>
             </div>
-            <div class="tool-separator"></div>
-            <div class="tool-group">
-                <button class="tool-btn" id="btn-undo" title="Annuler">↶</button>
-                <button class="tool-btn" id="btn-redo" title="Rétablir">↷</button>
+
+            <div class="tool-separator" aria-hidden="true"></div>
+
+            <div class="tool-group" role="toolbar" aria-orientation="vertical" aria-label="Historique">
+                <button type="button" class="tool-btn" id="btn-undo" data-tip="Annuler (Ctrl+Z)" data-tip-pos="right" aria-label="Annuler">
+                    <svg class="icon" aria-hidden="true"><use href="#i-undo"></use></svg>
+                </button>
+                <button type="button" class="tool-btn" id="btn-redo" data-tip="Rétablir (Ctrl+Y)" data-tip-pos="right" aria-label="Rétablir">
+                    <svg class="icon" aria-hidden="true"><use href="#i-redo"></use></svg>
+                </button>
             </div>
-            <div class="tool-separator"></div>
-            
-            <div class="color-section">
-                <input type="color" id="color-picker" value="#000000">
-            </div>
-            
-            <div class="width-section">
-                <input type="range" id="width-slider" min="1" max="20" value="3" orient="vertical">
-                <span id="width-display">3px</span>
+
+            <div class="sidebar-footer">
+                <label class="color-control" data-tip="Couleur du trait" data-tip-pos="right">
+                    <span class="sr-only">Couleur du trait</span>
+                    <input type="color" id="color-picker" value="#000000" aria-label="Couleur du trait">
+                </label>
+
+                <div class="width-control">
+                    <span id="width-display" class="width-value">3 px</span>
+                    <input type="range" id="width-slider" class="width-slider" min="1" max="20" value="3"
+                           orient="vertical" aria-label="Épaisseur du trait">
+                </div>
             </div>
         </aside>
-        
+
         <div id="canvas-container">
             <canvas id="whiteboard-canvas"></canvas>
-            
-            <div id="recognition-overlay" class="hidden">
+
+            <div id="recognition-overlay" class="hidden" role="dialog" aria-live="polite" aria-label="Forme reconnue">
                 <div class="recognition-card">
                     <p id="recognition-text">Forme détectée</p>
                     <div class="recognition-actions">
-                        <button id="btn-accept-recognition">✓ Conserver</button>
-                        <button id="btn-reject-recognition">✗ Annuler</button>
+                        <button type="button" id="btn-accept-recognition" class="btn btn-primary">
+                            <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                            Conserver
+                        </button>
+                        <button type="button" id="btn-reject-recognition" class="btn btn-secondary">
+                            <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                            Annuler
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <aside id="right-panel" class="hidden">
-            <div class="panel-section">
-                <h3>Mode de tracé</h3>
-                <div class="mode-tabs">
-                    <button class="mode-tab" data-mode="raw">✍️ RAW</button>
-                    <button class="mode-tab active" data-mode="hybrid">⚡ Hybride</button>
-                    <button class="mode-tab" data-mode="smart">🧠 SMART</button>
-                </div>
+
+        <aside id="right-panel" class="hidden" aria-label="Réglages">
+            <div class="panel-header">
+                <h2>Réglages</h2>
+                <button type="button" id="btn-panel-close" class="icon-btn" aria-label="Fermer les réglages" title="Fermer">
+                    <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                </button>
             </div>
-            
-            <div class="panel-section">
-                <h3>Police</h3>
-                <select id="font-family" style="width:100%; padding: 8px; margin-bottom: 8px;">
-                    <option>Inter</option>
-                    <option>Arial</option>
-                    <option>Roboto</option>
-                    <option>Times New Roman</option>
-                    <option>Courier New</option>
-                </select>
-            </div>
-            
-            <div class="panel-section">
-                <h3>Zoom</h3>
-                <div style="display:flex; gap: 8px;">
-                    <button id="btn-zoom-in" style="flex:1;">+</button>
-                    <button id="btn-zoom-out" style="flex:1;">−</button>
-                </div>
-                <div style="display:flex; gap: 8px; margin-top: 8px;">
-                    <button id="btn-zoom-fit" style="flex:1;">Ajuster</button>
-                    <button id="btn-zoom-reset" style="flex:1;">100%</button>
-                </div>
-                <div style="text-align: center; margin-top: 8px;" id="zoom-display">100%</div>
+
+            <div class="panel-body">
+                <section class="panel-section">
+                    <h3 class="panel-label">Mode de tracé</h3>
+                    <div class="segmented" role="tablist" aria-label="Mode de tracé">
+                        <button type="button" class="mode-tab" data-mode="raw" role="tab" aria-selected="false">RAW</button>
+                        <button type="button" class="mode-tab active" data-mode="hybrid" role="tab" aria-selected="true">Hybride</button>
+                        <button type="button" class="mode-tab" data-mode="smart" role="tab" aria-selected="false">SMART</button>
+                    </div>
+                    <p class="panel-hint">RAW conserve le tracé brut, Hybride corrige les formes évidentes, SMART applique la reconnaissance complète.</p>
+                </section>
+
+                <section class="panel-section">
+                    <h3 class="panel-label">Police</h3>
+                    <div class="select-wrap">
+                        <select id="font-family" aria-label="Police du texte">
+                            <option>Inter</option>
+                            <option>Arial</option>
+                            <option>Roboto</option>
+                            <option>Times New Roman</option>
+                            <option>Courier New</option>
+                        </select>
+                        <svg class="icon icon-sm select-chevron" aria-hidden="true"><use href="#i-chevron"></use></svg>
+                    </div>
+                </section>
+
+                <section class="panel-section">
+                    <h3 class="panel-label">Zoom</h3>
+                    <div class="zoom-row">
+                        <button type="button" id="btn-zoom-out" class="icon-btn is-bordered" aria-label="Zoom arrière" title="Zoom arrière">
+                            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-minus"></use></svg>
+                        </button>
+                        <div class="zoom-value"><span id="zoom-display">100 %</span></div>
+                        <button type="button" id="btn-zoom-in" class="icon-btn is-bordered" aria-label="Zoom avant" title="Zoom avant">
+                            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-plus"></use></svg>
+                        </button>
+                    </div>
+                    <div class="panel-row">
+                        <button type="button" id="btn-zoom-fit" class="btn btn-secondary" title="Ajuster à l'écran">Ajuster</button>
+                        <button type="button" id="btn-zoom-reset" class="btn btn-secondary" title="Revenir à 100 %">Réinitialiser</button>
+                    </div>
+                </section>
             </div>
         </aside>
     </main>
-    
+
     <footer id="statusbar">
-        <span id="stat-mode">Mode: Hybride</span>
-        <span>|</span>
-        <span id="stat-zoom">Zoom: 100%</span>
-        <span>|</span>
-        <span id="stat-width">Trait: 3px</span>
-        <span>|</span>
-        <span id="stat-fps">FPS: --</span>
-        <span>|</span>
-        <span id="stat-latency">Latence: -- ms</span>
-        <span>|</span>
-        <span id="stat-objects">Objets: 0</span>
-        
-        <button id="btn-debug" title="Debug Panel">🔧</button>
+        <div class="statusbar-stats">
+            <span class="stat"><span class="stat-label">Mode</span><span class="stat-value" id="stat-mode">Hybride</span></span>
+            <span class="stat-sep" aria-hidden="true"></span>
+            <span class="stat"><span class="stat-label">Zoom</span><span class="stat-value" id="stat-zoom">100 %</span></span>
+            <span class="stat-sep" aria-hidden="true"></span>
+            <span class="stat"><span class="stat-label">Trait</span><span class="stat-value" id="stat-width">3 px</span></span>
+            <span class="stat-sep" aria-hidden="true"></span>
+            <span class="stat"><span class="stat-label">FPS</span><span class="stat-value" id="stat-fps">--</span></span>
+            <span class="stat-sep" data-optional aria-hidden="true"></span>
+            <span class="stat" data-optional><span class="stat-label">Objets</span><span class="stat-value" id="stat-objects">0</span></span>
+        </div>
+
+        <button type="button" id="btn-debug" class="icon-btn" data-tip="Panneau de débogage" data-tip-pos="up" aria-label="Panneau de débogage">
+            <svg class="icon" aria-hidden="true"><use href="#i-terminal"></use></svg>
+        </button>
     </footer>
-    
-    <div id="debug-panel" class="hidden" style="position:fixed; bottom: 40px; right: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 8px; z-index: 1000;">
-        <h3>Debug Panel</h3>
-        <button id="btn-close-debug" style="position:absolute; top: 10px; right: 10px; background:transparent; color:white; border:none; cursor:pointer;">×</button>
+
+    <div id="debug-panel" class="hidden" role="dialog" aria-label="Panneau de débogage">
+        <div class="debug-header">
+            <h3>Débogage</h3>
+            <button type="button" id="btn-close-debug" class="icon-btn" aria-label="Fermer le panneau de débogage">
+                <svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"></use></svg>
+            </button>
+        </div>
     </div>
 
     <!-- Scripts -->
